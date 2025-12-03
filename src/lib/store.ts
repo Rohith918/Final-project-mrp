@@ -91,16 +91,35 @@ export async function getFinanceForStudent(studentId: string) {
 
 /** ---------- Finance ---------- */
 export async function payFee(studentId: string, amount: number) {
-  const fin = store.finances.find((f) => f.studentId === studentId);
-  if (!fin) throw new Error('Finance record not found');
-  const applied = Math.min(amount, fin.due);
-  fin.paid += applied;
-  fin.due = Math.max(0, fin.totalFee - fin.scholarship - fin.paid);
-  await supabase
+  const { data, error } = await supabase
     .from(TABLES.finance)
-    .update({ paid: fin.paid, due: fin.due })
-    .eq('id', fin.id);
-  return { ...fin };
+    .select('*')
+    .eq('studentId', studentId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error('Finance record not found');
+
+  const currentPaid = data.paid ?? 0;
+  const totalDue = Math.max(0, (data.totalFee ?? 0) - (data.scholarship ?? 0) - currentPaid);
+  const applied = Math.max(0, Math.min(amount, totalDue));
+  if (applied === 0) return { ...data };
+
+  const paid = currentPaid + applied;
+  const due = Math.max(0, (data.totalFee ?? 0) - (data.scholarship ?? 0) - paid);
+
+  const { error: updateError } = await supabase
+    .from(TABLES.finance)
+    .update({ paid, due })
+    .eq('id', data.id);
+  if (updateError) throw updateError;
+
+  const idx = store.finances.findIndex((f) => f.id === data.id);
+  if (idx >= 0) {
+    store.finances[idx] = { ...store.finances[idx], paid, due };
+  } else {
+    store.finances.push({ ...data, paid, due });
+  }
+  return { ...data, paid, due };
 }
 
 /** ---------- Lessons ---------- */

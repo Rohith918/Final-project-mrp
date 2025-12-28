@@ -1,4 +1,4 @@
-# [HSU Portal · Student Dashboard Overview] (https://final-project-mrp.vercel.app/)
+# HSU Portal · Student Dashboard Overview (https://final-project-mrp.vercel.app/)
 
 Modern, multi-tenant academic portal inspired by the original [Figma exploration](https://www.figma.com/design/KnNgjCrnMCuvXdZgH18AgR/Student-Dashboard-Overview). The app ships role-aware dashboards for students, teachers, parents, and administrators on top of Supabase auth/data, Tailwind CSS v4 theming, and shadcn/Radix UI primitives.
 
